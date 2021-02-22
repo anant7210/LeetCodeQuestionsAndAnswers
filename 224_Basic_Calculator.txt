@@ -1,0 +1,76 @@
+/* 224. Basic Calculator
+
+Given a string s representing an expression, implement a basic calculator to evaluate it.
+
+ 
+
+Example 1:
+
+Input: s = "1 + 1"
+Output: 2
+Example 2:
+
+Input: s = " 2-1 + 2 "
+Output: 3
+Example 3:
+
+Input: s = "(1+(4+5+2)-3)+(6+8)"
+Output: 23
+
+*/
+
+class Solution {
+    public int calculate(String s) {
+        HashMap<Integer, Integer> mapping = new HashMap<Integer, Integer>();
+        int i = 0;
+        ArrayList<Integer> stack = new ArrayList<Integer>();
+        while(i < s.length()) {
+            if(s.charAt(i) == '(') {
+                stack.add(i);
+            }
+            else if(s.charAt(i) == ')') {
+                mapping.put(stack.get(stack.size() - 1), i);
+                stack.remove(stack.size() - 1);
+            }
+            i++;
+        }
+        return calculate(s, 0, s.length() - 1, mapping);
+    }
+    
+    private int calculate(String s, int start, int end, HashMap<Integer, Integer> mapping) {
+        if(start > end)
+            return 0;
+        int result = 0;
+        int curr = 0;
+        int currSign = 1;
+        int i = start;
+        while(i <= end) {
+            char currChar = s.charAt(i);
+            if(currChar == ' ') {
+                i++;
+                continue;
+            }
+            if(currChar == '(') {
+                curr = calculate(s, i + 1, mapping.get(i) - 1, mapping);
+                i = mapping.get(i) + 1;
+                continue;
+            }
+            if(currChar != '-' && currChar != '+') {
+                curr = curr * 10 + (int)currChar - 48;
+            }
+            else {
+                if(curr != 0) {
+                    result = result + currSign * curr;
+                    curr = 0;
+                }
+                if(currChar == '-')
+                    currSign = -1;
+                else
+                    currSign = 1;
+            }
+            i++;
+        }
+        result = result + currSign * curr;
+        return result;
+    }
+}
