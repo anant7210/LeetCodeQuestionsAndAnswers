@@ -1,0 +1,46 @@
+/* 10. Regular Expression Matching
+
+Given an input string (s) and a pattern (p), implement regular expression matching with support for '.' and '*' where: 
+
+'.' Matches any single character.
+'*' Matches zero or more of the preceding element.
+The matching should cover the entire input string (not partial).
+
+*/
+
+class Solution {
+    public boolean isMatch(String s, String p) {
+        Boolean dp[][] = new Boolean[s.length()][p.length()];
+        return isMatch(s, p, 0, 0, dp);
+    }
+    
+    private boolean isMatch(String s, String p, int indexS, int indexP, Boolean[][] dp) {
+        if(indexS == s.length() && indexP == p.length())
+            return true;
+        else if(indexP == p.length())
+            return false;
+        else if(indexS == s.length()) {
+            if(indexP < p.length() - 1 && p.charAt(indexP + 1) == '*') {
+                return isMatch(s, p, indexS, indexP + 2, dp);
+            }
+            return false;
+        }
+        if(dp[indexS][indexP] != null)
+            return dp[indexS][indexP];
+        if(indexP < p.length() - 1 && p.charAt(indexP + 1) == '*') {
+            dp[indexS][indexP] = isMatch(s, p, indexS, indexP + 2, dp) || ((s.charAt(indexS) == p.charAt(indexP) || p.charAt(indexP) == '.') && (isMatch(s, p, indexS + 1, indexP, dp) || isMatch(s, p, indexS + 1, indexP + 2, dp))) ;
+            return dp[indexS][indexP];
+        }
+        if(p.charAt(indexP) == '.') {
+            dp[indexS][indexP] = isMatch(s, p, indexS + 1, indexP + 1, dp);
+            return dp[indexS][indexP];
+        }
+        if(s.charAt(indexS) == p.charAt(indexP)) {
+            dp[indexS][indexP] = isMatch(s, p, indexS + 1, indexP + 1, dp);
+            return dp[indexS][indexP];
+        } 
+        dp[indexS][indexP] = false;
+        return false;
+    }
+}
+
