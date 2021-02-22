@@ -1,0 +1,174 @@
+/*  218. The Skyline Problem
+
+A city's skyline is the outer contour of the silhouette formed by all the buildings in that city when viewed from a distance. Given the locations and heights of all the buildings, return the skyline formed by these buildings collectively.
+
+The geometric information of each building is given in the array buildings where buildings[i] = [lefti, righti, heighti]:
+
+lefti is the x coordinate of the left edge of the ith building.
+righti is the x coordinate of the right edge of the ith building.
+heighti is the height of the ith building.
+You may assume all buildings are perfect rectangles grounded on an absolutely flat surface at height 0.
+
+The skyline should be represented as a list of "key points" sorted by their x-coordinate in the form [[x1,y1],[x2,y2],...]. Each key point is the left endpoint of some horizontal segment in the skyline except the last point in the list, which always has a y-coordinate 0 and is used to mark the skyline's termination where the rightmost building ends. Any ground between the leftmost and rightmost buildings should be part of the skyline's contour.
+
+Note: There must be no consecutive horizontal lines of equal height in the output skyline. For instance, [...,[2 3],[4 5],[7 5],[11 5],[12 7],...] is not acceptable; the three lines of height 5 should be merged into one in the final output as such: [...,[2 3],[4 5],[12 7],...]
+
+ 
+
+Example 1:
+
+
+Input: buildings = [[2,9,10],[3,7,15],[5,12,12],[15,20,10],[19,24,8]]
+Output: [[2,10],[3,15],[7,12],[12,0],[15,10],[20,8],[24,0]]
+Explanation:
+Figure A shows the buildings of the input.
+Figure B shows the skyline formed by those buildings. The red points in figure B represent the key points in the output list.
+Example 2:
+
+Input: buildings = [[0,2,3],[2,5,3]]
+Output: [[0,3],[5,0]]
+
+/*
+
+class Solution {
+    public List<List<Integer>> getSkyline(int[][] buildings) {
+        TreeMap<Integer, Integer> keyPoints = new TreeMap<Integer, Integer>();
+        HashMap<Integer, Integer> keyPointHeight = new HashMap<Integer, Integer>();
+        int i = 0;
+        while(i < buildings.length) {
+            insertIntoKeyPoints(buildings[i][0], buildings[i][1], buildings[i][2], keyPoints, keyPointHeight);
+            i++;
+        }
+        
+        ArrayList<List<Integer>> result = new ArrayList<List<Integer>>();
+        int prevEnd = -1;
+        Iterator<Integer> it = keyPoints.keySet().iterator();
+        while(it.hasNext()) {
+            int next = it.next();
+            ArrayList<Integer> n = new ArrayList<Integer>();
+            if(prevEnd != -1 && prevEnd < next) {
+                n.add(prevEnd);
+                n.add(0);
+                result.add(n);
+                n = new ArrayList<Integer>();
+            }
+            n.add(next);
+            n.add(keyPointHeight.get(next));
+            result.add(n);
+            prevEnd = keyPoints.get(next);
+        }
+        ArrayList<Integer> last = new ArrayList<Integer>();
+        last.add(prevEnd);
+        last.add(0);
+        result.add(last);
+        return result;
+    }
+    
+    private void insertIntoKeyPoints(int start, int end, int height, TreeMap<Integer, Integer> keyPoints, HashMap<Integer, Integer> keyPointHeight) {
+        if(keyPoints.size() == 0) {
+            keyPoints.put(start, end);
+            keyPointHeight.put(start, height);
+            return;
+        }
+        ArrayList<Integer> listOfKeys = new ArrayList<Integer>(keyPoints.keySet());
+        int i = 0;
+        while(i < listOfKeys.size() && start < end) {
+            if(start < listOfKeys.get(i) && end < listOfKeys.get(i)) {
+                keyPoints.put(start, end);
+                keyPointHeight.put(start, height);
+                return;
+            }
+            else if(start > keyPoints.get(listOfKeys.get(i))) {
+                i++;
+                continue;
+            }
+            int tempH = keyPointHeight.get(listOfKeys.get(i));
+            int tempE = keyPoints.get(listOfKeys.get(i));
+            int tempS = listOfKeys.get(i);
+            if(start > tempS) {
+                if(tempH > height) {
+                    start = tempE;
+                }
+                else if(tempH < height) {
+                    keyPoints.put(tempS, start);
+                    if(end < tempE) {
+                        keyPoints.put(end, tempE);
+                        keyPointHeight.put(end, tempH);
+                        i++;
+                        continue;
+                    }
+                }
+                else {
+                    start = tempS;
+                    keyPoints.remove(tempS);
+                    keyPointHeight.remove(tempS);
+                    if(end < tempE) {
+                        end = tempE;
+                    }
+                }
+            }
+            else if(start < tempS) {
+                if(tempH > height) {
+                    if(end <= tempE) {
+                        keyPoints.put(start, tempS);
+                        keyPointHeight.put(start, height);
+                        return;
+                    }
+                    start = tempE;
+                }
+                else if(tempH < height) {
+                    if(end < tempE) {
+                        keyPoints.remove(tempS);
+                        keyPointHeight.remove(tempS);
+                        keyPoints.put(start, end);
+                        keyPoints.put(end, tempE);
+                        keyPointHeight.put(start, height);
+                        keyPointHeight.put(end, tempH);
+                        return;
+                    }
+                    keyPoints.remove(tempS);
+                    keyPointHeight.remove(tempS);
+                }
+                else {
+                    keyPoints.remove(tempS);
+                    keyPointHeight.remove(tempS);
+                    if(end < tempE)
+                        end = tempE;
+                }
+            }
+            else {
+                if(tempE == end) {
+                    if(height > tempH) {
+                        keyPointHeight.put(tempS, height);
+                    }
+                    return;
+                }
+                if(tempH > height) {
+                    start = tempE;
+                    i++;
+                    continue;
+                }
+                else if(tempH < height) {
+                    keyPoints.remove(tempS);
+                    keyPointHeight.remove(tempS);
+                    if(end < tempE) {
+                        keyPoints.put(end, tempE);
+                        keyPointHeight.put(end, tempH);
+                    }
+                }
+                else {
+                    keyPoints.remove(tempS);
+                    keyPointHeight.remove(tempS);
+                    if(end < tempE) {
+                        end = tempE;
+                    }
+                }
+            }
+            i++;
+        }
+        if(start < end) {
+            keyPoints.put(start, end);
+            keyPointHeight.put(start, height);
+        }
+    }
+}
