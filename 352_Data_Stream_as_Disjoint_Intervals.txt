@@ -1,0 +1,94 @@
+/* 352. Data Stream as Disjoint Intervals
+
+Given a data stream input of non-negative integers a1, a2, ..., an, ..., summarize the numbers seen so far as a list of disjoint intervals.
+
+For example, suppose the integers from the data stream are 1, 3, 7, 2, 6, ..., then the summary will be:
+
+[1, 1]
+[1, 1], [3, 3]
+[1, 1], [3, 3], [7, 7]
+[1, 3], [7, 7]
+[1, 3], [6, 7]
+
+Explanation:
+
+To solve the problem we can use a TreeMap to store the start and end of all the intervals possible in the datastream. The key would be the start of an interval and the corresponding value would be the end of the interval.
+
+While fetching the intervals all we need to do is to parse the keyset of the treemap created above and add the key and value to the resultant 2 dimensional array.
+
+For addition of a new integer (val) a HashMap is required to store the starting point of and interval as value mapped to the the endpoint of an interval as key. When a new integer is added to the datastream, the program first checks whether the new value lies within existing intervals present in the treeMap. If yes, then the function returns with no change to existing member variables at all.
+
+If not, the treemap is checked for existence of key (val + 1) and the hashmap is checked for existence of key (val - 1). If both conditions return true, these keys are removed from their corresponding maps and new key-value pair is added with key as the value of key(val - 1) in the HashMap and value as the value of key (val + 1) before removal of the keys.
+
+If only (val - 1) exists as a key in the HashMap, the key-value pair in the treemap with key equal to the value of key (val - 1) in the HashMap is modified to have value as (val) and a new key value pair is added in the HashMap with key as (val) and value equal to the value of the key (val - 1) in the HashMap. The key (val - 1) is then removed from the HashMap.
+
+If only (val + 1) exists as key in TreeMap, the key-value pair in the HashMap with key equal to the value corresponding to key (val + 1) in the TreeMap is modified to have value as (val) and a new key value pair is added to TreeMap with key as (val) and value equal to the value of the key (val + 1) in the TreeMap. The key (val + 1) is then removed from the TreeMap.
+
+*/
+
+class SummaryRanges {
+    TreeMap<Integer, Integer> intervals = new TreeMap<Integer, Integer>();
+    HashMap<Integer, Integer> reverseIntervals = new HashMap<Integer, Integer>();
+
+    /** Initialize your data structure here. */
+    public SummaryRanges() {
+        
+    }
+    
+    public void addNum(int val) {
+        if(this.intervals.size() == 0) {
+            this.intervals.put(val, val);
+            this.reverseIntervals.put(val, val);
+            return;
+        }
+        Iterator<Integer> it = this.intervals.keySet().iterator();
+        while(it.hasNext()) {
+            int next = it.next();
+            if(val >= next && val <= this.intervals.get(next)) {
+                return;
+            }
+        }
+        if(this.intervals.containsKey(val + 1) && this.reverseIntervals.containsKey(val - 1)) {
+            int start = this.reverseIntervals.get(val - 1);
+            int end = this.intervals.get(val + 1);
+            this.intervals.remove(this.reverseIntervals.get(val - 1));
+            this.reverseIntervals.remove(this.intervals.get(val + 1));    
+            this.intervals.remove(val + 1);
+            this.reverseIntervals.remove(val - 1);
+            this.intervals.put(start, end);
+            this.reverseIntervals.put(end, start);
+        }
+        else if(this.intervals.containsKey(val + 1)) {
+            int start = val;
+            int end = this.intervals.get(val + 1);
+            this.intervals.remove(val + 1);
+            this.intervals.put(start, end);
+            this.reverseIntervals.put(end, start);;
+        }
+        else if(this.reverseIntervals.containsKey(val - 1)) {
+            int start = this.reverseIntervals.get(val - 1);
+            int end = val;
+            this.intervals.put(start, end);
+            this.reverseIntervals.remove(val - 1);
+            this.reverseIntervals.put(end, start);
+        }
+        else {
+            this.intervals.put(val, val);
+            this.reverseIntervals.put(val, val);
+        }
+    }
+    
+    public int[][] getIntervals() {
+        int[][] result = new int[this.intervals.size()][2];
+        Iterator<Integer> it = this.intervals.keySet().iterator();
+        int i = 0;
+        while(it.hasNext()) {
+            int next = it.next();
+            result[i][0] = next;
+            result[i][1] = this.intervals.get(next);
+            i++;
+        }
+        return result;
+    }
+}
+
